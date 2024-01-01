@@ -1,0 +1,1041 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include <conio.h>
+#define MAX_BIO_LENGTH 200
+
+
+void textcolor(int color_name) {
+     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color_name);
+}
+void Background(int BackC) {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    WORD wColor = ((BackC & 0x0F) << 4) + (csbi.wAttributes & 0x0F);
+     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wColor);
+}
+void clr() {
+    system("cls");
+}
+
+//Structure to store projects
+struct project {
+    char username[50];
+      char title[100];
+      char code[800];
+      char course_code[20];
+      char semester[10];
+      char project_id[50];
+      struct project* Next;
+};
+
+// Define a structure to store user information
+struct User {
+    char username[50];
+    char password[50];
+    char phoneNumber[15];
+     char email[50];
+    char bio[MAX_BIO_LENGTH];
+    char id[20];
+    struct project* Projects[200];
+    struct User* next;
+};
+
+struct User* head = NULL; 
+struct project* first = NULL; // Head of the linked list
+
+// Function to register a new user and write their information to a file
+void registerUser() {
+    struct User newUser;
+    printf("\n      ");
+
+    Background(4);
+    textcolor(7);
+    printf("      Register a new user       \n");
+
+     textcolor(7);
+     Background(1);
+
+    printf("\n           Enter username:   ");
+    Background(7);
+    printf("    ");
+    scanf("%s", newUser.username);
+
+
+    textcolor(7);
+    Background(1);
+    // Check if the username is already registered
+        if (if_Registerd(newUser.username)) {
+
+            
+            printf("\n          ");
+            Background(4);
+            textcolor(7);
+            printf("  Username is already taken. Please choose another one.   \n");
+
+            textcolor(7);
+            Background(1);
+            printf("\n          Do you want try again ?\n          Press 1 if yes else press any key to return: \n");
+           if(getch()=='1') {
+            clr();
+             registerUser();
+             return;
+           } else {
+            clr();
+            return;
+           }
+        }
+
+    printf("\n           Enter password: ");
+    Background(7);
+    printf("    ");
+    scanf("%s", newUser.password);
+
+
+    textcolor(7);
+    Background(1);
+    printf("\n           Enter phone number: ");
+    Background(7);
+    printf("    ");
+    scanf("%s", newUser.phoneNumber);
+
+     textcolor(7);
+    Background(1);
+    printf("\n           Enter email: ");
+    Background(7);
+    printf("   ");
+    scanf("%s", newUser.email);
+
+    textcolor(7);
+    Background(1);
+    printf("\n           Enter ID number: ");
+
+    Background(7);
+    printf("   ");
+    scanf("%s", newUser.id);
+
+    textcolor(7);
+    Background(1);
+    printf("\n           Enter a short bio (max 200 characters): ");
+    Background(7);
+    printf("    ");
+    fflush(stdin);
+   gets(newUser.bio);
+
+
+    textcolor(7);
+    Background(1);
+    if (strlen(newUser.bio) >= MAX_BIO_LENGTH) {
+        printf("Bio is too long. Please keep it under 200 characters.\n");
+        return;
+    }
+
+    // Add the new user to the linked list
+    newUser.next = head;
+    head = (struct User*)malloc(sizeof(struct User));
+    if (head == NULL) {
+        printf("Memory allocation failed.\n");
+        return;
+    }
+    memcpy(head, &newUser, sizeof(struct User));
+
+    // Append the new user's information to the user_profiles.txt file
+    FILE* userFile = fopen("user_profiles.txt", "a");
+    if (userFile == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    fprintf(userFile, "%s %s %s %s %s %s\n", newUser.username, newUser.password, newUser.phoneNumber, newUser.email, newUser.id, newUser.username);
+    fclose(userFile);
+    clr();
+
+    printf("\n\n                 ");
+    textcolor(7);
+    Background(4);
+    printf("  Registration successful!  \n\n");
+
+    textcolor(7);
+    Background(1);
+    printf("              1.Log in\n\n              2.Go Back to Main Menu\n\n              Enter you choice: ");
+     Background(7);
+    printf("    ");
+    int choice;
+    scanf("%d", &choice);
+
+    system("color 17");
+    if(choice==1) {
+        displayProfile(newUser.username);
+        profile_Menu(newUser.username);
+        return;
+    } else {
+        return;
+    }
+}
+
+
+//to store all project in a linked list
+struct project* TotalProjectList() {
+              char FileTitle[50];
+         char FileUsername[50];
+          char FileCode[500];
+         char FileCourse[50];
+          char FileSem[50];
+          char FileProject_id[50];
+
+    struct project* first = NULL;
+    FILE* projectFile = fopen("ProjectList.txt", "r");
+    if (projectFile == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+       while(fscanf(projectFile, "%s %s %s %s %s %s", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem) != EOF) {
+            
+         struct project *p;
+         p = (struct project*) malloc(sizeof(struct project));
+         strcpy(p->username, FileUsername);
+         strcpy(p->project_id, FileProject_id);
+         strcpy(p->title, FileTitle);
+         strcpy(p->code, FileCode);
+         strcpy(p->course_code, FileCourse);
+         strcpy(p->semester, FileSem);
+         p->Next = first;
+         first = p;
+
+      }
+    fclose(projectFile);
+    return first;
+}
+
+//to display all projects
+void displayProjets() {
+    
+    printf("\n\n       ");
+    Background(4);
+    textcolor(7);
+    printf("   Search & View Projects   \n\n");
+
+    textcolor(7);
+    Background(1);
+    struct project* temp;
+    temp = TotalProjectList();
+    int i=1;
+    while(temp!=NULL) {
+            printf("           %d. %s   --------    %s\n", i, temp->title, temp->project_id);
+             i++; 
+                               
+         temp = temp->Next;  
+    }
+    printf("\n           Enter Project No. you want to view: ");
+    int no;
+    Background(7);
+    scanf("%d", &no);
+    textcolor(7);
+    Background(1);
+     temp = TotalProjectList();
+     i=1;
+     clr();
+     printf("\n        Result:\n");
+    while(temp!=NULL) {
+         if(i==no) {
+                           printf("\n\n          -------------->");
+                           Background(6);
+                           printf(" %s ", temp->title);
+                           textcolor(7);
+                           Background(1);
+                           printf("<--------------\n\n");
+                           printf("          ");
+                           Background(2);
+                           printf("  %s  \n\n", temp->project_id);
+                           textcolor(7);
+                           Background(1);
+                           printf("          ");
+                           Background(2);
+                           printf("Added by %s\n\n", temp->username);
+                           textcolor(7);
+                           Background(1);
+                           printf("       -->Sourse Code Link: %s\n\n       -->Course_Code: %s\n\n       -->Semester: %s\n", temp->code, temp->course_code, temp->semester);
+                           printf("\n          -------------------**------------------\n\n");
+                           break;
+                        } 
+         i++;                   
+         temp = temp->Next;  
+    }
+    printf("\n\nPress Enter to return.");
+    getch();
+    
+}
+
+
+//to count total projects of a user
+int CountProjects(char* username) {
+      int count = 0;
+      struct project* temp;
+      temp = TotalProjectList();
+
+     while(temp!=NULL) {
+        if(strcmp(temp->username, username) == 0) {
+            count++;
+        }
+        temp = temp->Next;   
+     }  
+   return count;
+}
+
+
+//to check multiple Projrect of same title
+int multipleProjects(char* Title) {
+    int count = 0;
+      struct project* temp;
+      temp = TotalProjectList();
+
+     while(temp!=NULL) {
+        if(strcmp(temp->title, Title) == 0) {
+            count++;
+        }
+        temp = temp->Next;   
+     }  
+            
+    return count;
+}
+  
+
+//to view a specific project
+void viewProject() {
+     
+     char Title[50];
+     char id[50];
+     int true=0, found=0;
+       printf("\n    1.Searh by Title.\n\n    2.Search by ID.\n\n    3.All ProjectList\n\n    Enter your choice: ");
+
+        int choice;
+        scanf("%d",&choice);
+        struct project* temp;
+        if(choice==3) {
+            clr();
+            displayProjets();
+            
+        } else {
+            if(choice==1) {
+              clr();
+              printf("\n    Enter Project Title to search for: ");
+              fflush(stdin);
+              gets(Title);   
+             int count = multipleProjects(Title);
+         
+          
+            clr();
+                if(count>1) {
+                printf("\n  %d Projetcs Found with this Title.\n\n", count);
+                        temp = TotalProjectList();  
+                        int i=1;
+                     while(temp!=NULL) {
+                           if(strcmp(temp->title, Title) == 0) {
+                               printf("           %d. %s   --------    %s\n", i, temp->title, temp->project_id);
+                                i++; 
+                               }
+                            temp = temp->Next;        
+                      } 
+                   printf("\n     Enter Project ID to View: ");
+                   fflush(stdin);
+                    gets(id);
+                   clr();
+                    true = 1;  
+                }
+            
+            } else if(choice==2) {
+                   clr();
+                   printf("\n      Enter Project ID to Search for: ");
+                   fflush(stdin);
+                   gets(id);
+                    true = 1;
+                 }
+            
+           
+           clr();
+           printf("\n        Result:\n\n");
+           temp = TotalProjectList();
+                    while(temp!=NULL) {
+                        if(true) {
+                           if(strcmp(temp->project_id, id) == 0) {
+                             found=1;
+                           }   
+                            
+                        } else {
+                            if(strcmp(temp->title, Title) == 0) {
+                                found = 1;
+                            }
+                        }
+                        
+                        if(found) {
+                           printf("\n\n          -------------->");
+                           Background(6);
+                           printf(" %s ", temp->title);
+                           textcolor(7);
+                           Background(1);
+                           printf("<--------------\n\n");
+                           printf("          ");
+                           Background(2);
+                           printf("  %s  \n\n", temp->project_id);
+                           textcolor(7);
+                           Background(1);
+                           printf("          ");
+                           Background(2);
+                           printf("Added by %s\n\n", temp->username);
+                           textcolor(7);
+                           Background(1);
+                           printf("       -->Sourse Code Link: %s\n\n       -->Course_Code: %s\n\n       -->Semester: %s\n", temp->code, temp->course_code, temp->semester);
+                           printf("\n          ---------**--------\n\n");
+                           break;
+                        }                  
+                            temp = temp->Next;  
+                    }
+        
+  
+    if(!found) {
+        printf("No Such Project Found.\n\n");
+    }
+    printf("Press Enter to return.");
+      getch();
+    }
+}
+
+//to Display the list of the projects
+void displayProjectList(char* username) {
+        
+         char FileTitle[50];
+         char FileUsername[50];
+          char FileCode[500];
+         char FileCourse[50];
+          char FileSem[50];
+          char FileProject_id[50];
+          
+    FILE* projectFile = fopen("ProjectList.txt", "r");
+
+    int i=1;
+       while(fscanf(projectFile, "%s %s %s %s %s %s", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem) != EOF) {
+
+        {
+         if (strcmp(username, FileUsername) == 0)
+         {
+           printf("           %d. %s   --------    %s\n", i, FileTitle, FileProject_id);
+           i++;
+         }
+        }
+
+      }
+    fclose(projectFile);
+}
+
+//to add projects to profile
+void Add_Projects(char* username) {
+    struct project newProject;
+                
+                printf("\n\n     ");
+                textcolor(7);
+                Background(4);
+                printf("    Add a new Project    \n");
+                textcolor(7);
+                Background(1);
+
+    char id[20];
+    char year[5];
+    //updationg Total Project Count
+     printf("\nEnter Project Title (Do not use space Example: Pro_Title): ");
+     Background(7);
+     printf("    ");
+     fflush(stdin);
+     gets(newProject.title);
+    
+     textcolor(7);
+    Background(1);
+     printf("Enter Link(Drive or GitHub) of the Source Code: ");
+     Background(7);
+     printf("    ");
+     fflush(stdin);
+     gets(newProject.code);
+
+    textcolor(7);
+    Background(1);
+     printf("Enter Course Code: ");
+
+     Background(7);
+     printf("    ");
+     fflush(stdin);
+     gets(newProject.course_code);
+
+
+     textcolor(7);
+     Background(1);
+     printf("Enter Semester: ");
+
+     Background(7);
+     printf("    ");
+     fflush(stdin);
+     gets(newProject.semester);
+     
+     textcolor(7);
+     Background(1);
+     printf("Enter Student Id: ");
+
+     Background(7);
+     printf("    ");
+     fflush(stdin);
+     gets(id);
+
+      textcolor(7);
+      Background(1);
+     printf("Enter Submission Year: ");
+
+     Background(7);
+     printf("    ");
+      fflush(stdin);
+     gets(year);
+
+     
+         textcolor(7);
+    Background(1);
+     strcpy(newProject.project_id, "PRO");
+
+     strcat(newProject.project_id, year);
+     strcat(newProject.project_id, newProject.title);
+     strcat(newProject.project_id, id);
+
+     newProject.Next = first;
+ 
+
+    // Append the new Project's information to the user_profiles.txt file
+     FILE* projectFile = fopen("ProjectList.txt", "a");
+    if (projectFile == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+    
+    strcpy(newProject.username, username);
+   // fwrite(&newProject, sizeof(struct project), 1, projectFile);
+    fprintf(projectFile, "%s %s %s %s %s %s\n",newProject.project_id, newProject.username, newProject.title, newProject.code, newProject.course_code, newProject.semester);
+    fclose(projectFile);
+     clr();
+     system("color 17");
+     printf("\n\n\n     Project Added Successfully.\n\n     Press Enter to return.");
+     getch();
+     return;
+}
+
+void Delete_Project(char* username) {
+      clr();
+          char FileTitle[50];
+         char FileUsername[50];
+          char FileCode[500];
+         char FileCourse[50];
+          char FileSem[50];
+          char FileProject_id[50];
+          
+          char toDelete[50];
+
+        printf("\n Enter Project Title/Project_ID to Delete: ");
+             fflush(stdin);
+             gets(toDelete);
+
+        FILE* projectFile = fopen("ProjectList.txt", "r");
+        FILE* temp = fopen("temparary.txt", "w");
+    
+    int found=0;
+     while(fscanf(projectFile, "%s %s %s %s %s %s", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem) != EOF) {
+
+        
+         if ((strcmp(username, FileUsername) == 0) && ((strcmp(FileTitle, toDelete) == 0) || (strcmp(FileProject_id, toDelete) == 0)))
+         {
+           found=1;
+         } else {
+             fprintf(temp, "%s %s %s %s %s %s\n", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem);
+         }   
+
+     }   
+        
+        fclose(projectFile);
+        fclose(temp);
+        
+            if(found) {
+                int choice;
+                printf("\n\n    Do you Want to Premanently Delete it ?\n    1.Delete\n    2.Cancel\n");
+                if(scanf("%d", &choice)==1) { 
+                    projectFile = fopen("ProjectList.txt", "w");
+                    temp = fopen("temparary.txt", "r");
+              while (fscanf(temp, "%s %s %s %s %s %s", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem) != EOF) {
+              fprintf(projectFile, "%s %s %s %s %s %s\n", FileProject_id, FileUsername, FileTitle, FileCode, FileCourse, FileSem);
+              }
+
+              fclose(projectFile);
+              fclose(temp); 
+              printf("\n Project Deleted Successfully!\n\n Press any key to return.");
+              getch();
+              }
+            }  else {
+                printf("\n Could not found or access the Project to delete!\n\n Press any key to return.");
+                getch(); 
+            }
+         
+         
+
+         return; 
+}
+
+
+//to edit or update profile
+void Update_Profile(char* username) {
+    clr();
+    char fileUsername[50];
+    char filePassword[50];
+    char filePhoneNumber[15];
+    char fileEmail[50];
+    char fileId[20];
+    char fileName[50];
+
+    char newUserName[50];
+    char newUserPhone[50];
+    char newUserEmail[50];
+    char newUserID[50];
+    char newUserPass[20];
+    int check = 0;
+        FILE* userFile = fopen("user_profiles.txt", "r");
+        FILE* temp = fopen("temparary.txt", "w");
+
+        printf("\n   1.Change Username\n   2.Edit Email\n   3.Edit Phone Number\n   4.Edit ID\n   5.Change Password\n   6.Go Back\n\n");
+        printf("  Enter your Choice: ");
+        int choice;
+        scanf("%d", &choice);
+        clr();
+        if((choice!=1) && (choice!=2) && (choice!=3) && (choice!=4) && (choice!=5)) {
+             clr();
+            displayProfile(username);
+            profile_Menu(username);
+            return;
+        }
+        while (fscanf(userFile, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+
+        if (strcmp(username, fileName) == 0) {
+              check = 1;
+           if(choice==1) {
+             printf("\nEnter New Username: ");
+             fflush(stdin);
+             gets(newUserName);
+             fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, newUserName);
+            strcpy(username, newUserName);
+           }
+            if(choice==2) {
+             printf("\nEnter New Email: ");
+             fflush(stdin);
+             gets(newUserEmail);
+            fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, newUserEmail, fileId, fileName);
+             
+           } else if(choice==3) {
+             printf("\n   Enter New Phone Number: ");
+             fflush(stdin);
+             gets(newUserPhone);
+             fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, newUserPhone, fileEmail, fileId, fileName);
+             
+           } else if(choice==4) {
+             printf("\n   Enter New Id: ");
+             fflush(stdin);
+             gets(newUserID);
+            
+             fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, fileEmail, newUserID, fileName);
+           } 
+           else if(choice==5) {
+              char old[20];
+              printf("\n   Enter Old Password: ");
+              fflush(stdin);
+              gets(old);
+              if(strcmp(old, filePassword) == 0) {
+                 printf("\n    Enter New Password: ");
+                fflush(stdin);
+                 gets(newUserPass);
+                 fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, newUserPass, filePhoneNumber, fileEmail, fileId, fileName);
+                 printf("\nPassword  is Changed Successfully!\n\n");
+                 printf("Press Enter to  update and continue. . .");
+                 getch();
+                 
+              } else {
+                check = 0;
+                printf("\nWrong Password.\n\nPress any key to Return");
+                getch();
+                fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName);
+              }
+             
+            //printf("\nConfirm Password: ");
+        
+           }
+
+        } else {
+                fprintf(temp, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName);
+        }
+        
+        }
+        fclose(userFile);
+        fclose(temp);
+        
+            userFile = fopen("user_profiles.txt", "w");
+            temp = fopen("temparary.txt", "r");
+         while (fscanf(temp, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+             fprintf(userFile, "%s %s %s %s %s %s\n", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName);
+         }
+
+         fclose(userFile);
+         fclose(temp); 
+         if(check) {  
+         clr();
+         printf("\n Profile Updated Successfully!\n\nPress any key to return.");
+         getch();
+         }
+         clr();
+         displayProfile(username);
+         profile_Menu(username);
+         return;
+    }
+
+
+ //to verify password
+   int verify(char* Name, char* password) {
+              char fileUsername[50];
+              char filePassword[50];
+              char filePhoneNumber[15];
+              char fileEmail[50];
+              char fileId[20];
+              char fileName[50];
+
+                 FILE* userFile = fopen("user_profiles.txt", "r");
+            if (userFile == NULL) {
+        printf("Error opening file.\n");
+        return 0;
+    }
+    while (fscanf(userFile, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+        if ((strcmp(password, filePassword)==0) && (strcmp(Name, fileName) == 0)) {
+              return 1;
+        }
+    }
+    
+
+    fclose(userFile);
+
+            return 0;
+   }
+
+   //to check if te username is registerd
+   int if_Registerd(char* username) {
+    char fileUsername[50];
+    char filePassword[50];
+    char filePhoneNumber[15];
+    char fileEmail[50];
+    char fileId[20];
+    char fileName[50];
+
+           FILE* userFile = fopen("user_profiles.txt", "r");
+    if (userFile == NULL) {
+        printf("Error opening file.\n");
+        return 0;
+    }
+
+    int found = 0;
+    while (fscanf(userFile, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+        if ((strcmp(username, fileName) == 0) || (strcmp(username, fileUsername) == 0)) {
+            found = 1;
+            break;
+        }
+    }
+
+    fclose(userFile);
+
+    if (!found) {
+        return 0;
+    } else {
+        return 1;
+    }
+
+   }
+
+
+//to match fixedRegistered Name
+char* match(char* username) {
+    char fileUsername[50];
+    char filePassword[50];
+    char filePhoneNumber[15];
+    char fileEmail[50];
+    char fileBio[MAX_BIO_LENGTH];
+    char fileId[20];
+    char fileName[50];
+     FILE* userFile = fopen("user_profiles.txt", "r");
+      while (fscanf(userFile, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+
+        if (strcmp(username, fileName) == 0) {
+            return fileUsername;
+        }
+      }
+      return username;
+      fclose(userFile);
+}
+
+//profile Menu
+void profile_Menu(char* username) {
+      printf("\n1. Add a Project\n2. Delete a Project\n3. view a Project\n4. Edit Profile\n5. Go Back to Main Menu\n");
+      printf("\nEnter Your Choice: ");
+      int choice;
+      scanf("%d", &choice);
+          switch (choice) {
+            case 1:
+                clr();
+                Add_Projects(username);
+                 clr();
+                  displayProfile(username);
+                  profile_Menu(username);
+                break;
+            case 2:
+                clr();
+                Delete_Project(username);
+                 clr();
+                  displayProfile(username);
+                  profile_Menu(username);
+                break;            
+            case 3:
+                 clr();
+                 viewProject();
+                  clr();
+                  displayProfile(username);
+                  profile_Menu(username);
+                 break;
+
+            case 4:
+                Update_Profile(username);
+               
+                break;
+            case 5:
+               return;
+            default:
+                printf("\nInvalid choice. Please try again.\n");
+                 clr();
+                 displayProfile(username);
+                 profile_Menu(username);
+        }
+}
+
+// Function to login and verify the password
+int login() {
+               printf("\n      ");
+
+               Background(4);
+               textcolor(7);
+               printf("      Log in       \n");
+     textcolor(7);
+     Background(1);
+    char username[50];
+    char password[50];
+    printf("\n      Enter username: ");
+    Background(7);
+    printf("  ");
+    scanf("%s", username);
+    textcolor(7);
+    Background(1);
+
+    // Check if the user is registered
+
+        if (if_Registerd(username)) {
+            printf("\n      Enter password: ");
+            Background(7);
+            printf("  ");
+            scanf("%s", password);
+          textcolor(7);
+          Background(1);      
+            if (verify(username, password)) {
+                 printf("\\n    Login successful!\n");
+                 system("color 17");
+                 displayProfile(username);
+                 profile_Menu(username);
+                 return 1;
+            } else {
+                int tryAgain;
+                while(1) {
+                   printf("\n     Incorrect password. Try again? (1 for Yes, 0 for No): ");
+                   scanf("%d", &tryAgain);
+                if (!tryAgain) {
+                    return 0;
+                } else {
+                   printf("\n     Again Enter password: ");
+                               Background(7);
+                               printf("  ");
+                   scanf("%s", password);
+                      textcolor(7);
+                      Background(1);                   
+                    if (verify(username, password)) {
+                        printf("\n      Login successful!\n");
+                        system("color 17");
+                        displayProfile(username);
+                        profile_Menu(username);
+                        return 1;
+                    }
+                }
+                }
+
+            }
+        }
+
+
+    printf("\n     User not registered.\n");
+    printf("\nDo you want to register ? \n1.Yes\n2.Try Again\n3.Press any key to Go Back to Main Menu\n\nEnter you choice: ");
+    int choice;
+    scanf("%d", &choice);
+    if(choice==1) {
+        clr();
+        registerUser();
+        return 0;
+    }
+    else if(choice==2) {
+        clr();
+        login();
+        return 1;
+    }
+     else {
+        return 0;
+    }
+    return 0;
+}
+
+// Function to display user profile from the file
+void displayProfile(char* username) {
+    clr();
+    char fileUsername[50];
+    char filePassword[50];
+    char filePhoneNumber[15];
+    char fileEmail[50];
+    char fileBio[MAX_BIO_LENGTH];
+    char fileId[20];
+    char fileName[50];
+
+    FILE* userFile = fopen("user_profiles.txt", "r");
+    if (userFile == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    int found = 0;
+       while (fscanf(userFile, "%s %s %s %s %s %s", fileUsername, filePassword, filePhoneNumber, fileEmail, fileId, fileName) != EOF) {
+
+        if (strcmp(username, fileName) == 0) {
+             //fscanf(userFile, " %[^\n]", fileBio);
+         //   fgets(fileBio, sizeof(fileBio), userFile);
+           
+           printf("\n            ");
+           Background(15);
+           printf("          ***____USER PROFILE____***           \n\n");
+           textcolor(7);
+           Background(1);
+           printf("        _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n");
+           printf("                          ");
+           Background(6);
+           printf("_______%s________\n", fileName);
+            textcolor(7);
+           Background(1);
+        //  printf("    %s\n\n", fileBio);
+          printf("\n               Id.No: %s\n\n", fileId);
+           printf("             Coantact Information: \n\n");
+           printf("             Phone Number: %s\n", filePhoneNumber);
+           printf("             Email: %s\n", fileEmail);
+           int Total_Projects = CountProjects(fileUsername);
+            
+           printf("             Total Projects: %d\n", Total_Projects);
+           if(Total_Projects)
+           {  printf("\n             Project List:                 Project_ID:\n\n");
+             displayProjectList(fileUsername);
+           }
+           found = 1;
+
+            break;
+        }
+      
+    }
+
+           
+    fclose(userFile);
+
+    if (!found) {
+      
+        printf("\n\n      ");
+        Background(4);  
+        printf("   User not found.  \n");
+         textcolor(7);
+         Background(1);
+       return;
+    } else {
+        
+           printf("\n             ");
+           Background(15);
+           printf("             ________***_________            ");
+            textcolor(7);
+            Background(1);
+            printf("\n       ");
+        return;
+    }
+}
+
+// Function to search for a profile by username
+void searchProfile() {
+    char searchUsername[50];
+    clr();
+    printf("\n     Enter the username to search for: ");
+              Background(7);
+              printf("  ");
+    scanf("%s", searchUsername);
+     system("color 17");
+    displayProfile(searchUsername);
+    
+      printf("\n      Press any key to return: ");
+         getch();
+        
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        system("color 17");
+        clr();
+        
+        printf("\n\n             ");
+        Background(15);
+        printf("  ******_____Project Management System_____******   \n\n\n");
+         textcolor(7);
+         Background(1);
+       
+        printf("             1. Register              2. Login\n\n\n             3. Search Profile        4. Search & View Projects\n");
+        printf("\n\n\n              Enter your choice:");
+        Background(7);
+        printf("    ");
+        scanf("%d", &choice);
+         system("color 17");
+        switch (choice) {
+            case 1:
+               system("cls");
+                registerUser();
+                break;
+            case 2:
+                clr();
+
+                login();
+                break;
+            case 3:
+                searchProfile();
+                break;
+            case 4:
+                // Clean up and exit
+               // exit(0);
+               clr();
+               displayProjets();
+               break;
+            default:
+                printf("Invalid choice. Please Press Enter & try again.");
+                getch();
+        }
+    }
+
+    return 0;
+}
